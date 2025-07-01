@@ -1,0 +1,24 @@
+﻿@model SelectedVersionOutput<List<Knapcode.NuGetTools.Logic.FrameworkEnumeratorData>>
+@{
+    ViewData["Title"] = "Known Frameworks";
+}
+
+<h1>Known frameworks</h1>
+
+<table class="table">
+    <thead>
+    <tr>
+        <th>Short Folder Name</th>
+        <th>.NET Framework Name</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var framework in Model.Output.OrderBy(x => x.Framework.DotNetFrameworkName))
+    {
+        <tr>
+            <td><code>@framework.Framework.ShortFolderName</code></td>
+            <td><code>@framework.Framework.DotNetFrameworkName</code></td>
+        </tr>
+    }
+    </tbody>
+</table>

@@ -25,11 +25,13 @@ public class HomeController : Controller
 
     private readonly IToolsFactory _toolsFactory;
     private readonly IUrlHelperFactory _urlHelperFactory;
+    private readonly IFrameworkEnumerator _frameworkEnumerator;
 
-    public HomeController(IToolsFactory toolsFactory, IUrlHelperFactory urlHelperFactory)
+    public HomeController(IToolsFactory toolsFactory, IUrlHelperFactory urlHelperFactory, IFrameworkEnumerator frameworkEnumerator)
     {
         _toolsFactory = toolsFactory;
         _urlHelperFactory = urlHelperFactory;
+        _frameworkEnumerator = frameworkEnumerator;
     }
 
     [HttpGet("/")]
@@ -312,6 +314,27 @@ public class HomeController : Controller
         var versionedOutput = await GetSelectedVersionOutputAsync(service, output, token);
 
         return View(versionedOutput);
+    }
+
+    [HttpGet("/{nuGetVersion}/known-frameworks")]
+    public async Task<IActionResult> KnownFrameworks([FromRoute] string nuGetVersion, [FromQuery] FrameworkPrecedenceInput input, CancellationToken token)
+    {
+        var redirect = await GetVersionRedirectAsync(token);
+        if (redirect != null)
+        {
+            return redirect;
+        }
+
+        var service = await _toolsFactory.GetServiceAsync(nuGetVersion, token);
+        if (service == null)
+        {
+            return NotFound();
+        }
+
+        var frameworks = _frameworkEnumerator.Enumerate(FrameworkEnumerationOptions.All).Where(x => x.Identifier is not ("Any" or "Agnostic" or "Unsupported")).ToList();
+        var output = await GetSelectedVersionOutputAsync(service, frameworks, token);
+
+        return View(output);
     }
 
     [HttpGet("/{nuGetVersion}/package-metadata")]
